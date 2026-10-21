@@ -1,0 +1,112 @@
+<article class="detalle" [class.detalle--pagina]="!embebido()" aria-live="polite">
+  @if (cargando()) {
+    <p class="estado">Cargando el detalle…</p>
+  } @else if (error(); as mensaje) {
+    <div class="estado estado--error" role="alert">
+      <p>{{ mensaje }}</p>
+      @if (!embebido()) {
+        <a routerLink="/">Regresar a la lista</a>
+      }
+    </div>
+  } @else if (pelicula(); as p) {
+    <header
+      class="portada"
+      [style.background-image]="fondo() ? 'url(' + fondo() + ')' : null"
+    >
+      <div class="portada__velo">
+        @if (embebido()) {
+          <button
+            type="button"
+            class="cerrar"
+            (click)="cerrar()"
+            aria-label="Cerrar detalle"
+          >
+            ✕
+          </button>
+        } @else {
+          <a class="volver" routerLink="/">← Regresar a la lista</a>
+        }
+        <h2>{{ p.title }}</h2>
+        @if (p.tagline) {
+          <p class="lema">{{ p.tagline }}</p>
+        }
+      </div>
+    </header>
+
+    <div class="cuerpo">
+      @if (poster(); as src) {
+        <img
+          class="poster"
+          [src]="src"
+          [alt]="'Póster de ' + p.title"
+          width="342"
+          height="513"
+        />
+      }
+
+      <div class="datos">
+        <p class="fila">
+          <span [appCalificacion]="p.vote_average">{{
+            p.vote_average | number: '1.1-1'
+          }}</span>
+          <span>{{ p.vote_count | number }} votos</span>
+          @if (duracion(); as d) {
+            <span>· {{ d }}</span>
+          }
+          <span>· {{ p.release_date | date: 'longDate' }}</span>
+        </p>
+
+        <ul class="generos">
+          @for (g of p.genres; track g.id) {
+            <li>{{ g.name }}</li>
+          }
+        </ul>
+
+        <h3>Sinopsis</h3>
+        <p class="sinopsis">
+          {{
+            p.overview || 'TMDB no tiene sinopsis en español para esta película.'
+          }}
+        </p>
+
+        <dl class="ficha">
+          <dt>Título original</dt>
+          <dd>{{ p.original_title }} ({{ p.original_language | uppercase }})</dd>
+          <dt>Estado</dt>
+          <dd>{{ p.status }}</dd>
+          @if (p.budget > 0) {
+            <dt>Presupuesto</dt>
+            <dd>{{ p.budget | currency: 'USD' : 'symbol' : '1.0-0' }}</dd>
+          }
+          @if (p.revenue > 0) {
+            <dt>Recaudación</dt>
+            <dd>{{ p.revenue | currency: 'USD' : 'symbol' : '1.0-0' }}</dd>
+          }
+          @if (p.production_companies.length) {
+            <dt>Producción</dt>
+            <dd>
+              @for (c of p.production_companies; track c.id; let ultimo = $last) {
+                {{ c.name }}{{ ultimo ? '' : ', ' }}
+              }
+            </dd>
+          }
+        </dl>
+
+        <p class="enlaces">
+          @if (embebido()) {
+            <a [routerLink]="['/pelicula', p.id]">Abrir en su propia página</a>
+          }
+          @if (p.homepage) {
+            <a [href]="p.homepage" target="_blank" rel="noopener">Sitio oficial</a>
+          }
+          <a
+            [href]="'https://www.themoviedb.org/movie/' + p.id"
+            target="_blank"
+            rel="noopener"
+            >Ver en TMDB</a
+          >
+        </p>
+      </div>
+    </div>
+  }
+</article>
