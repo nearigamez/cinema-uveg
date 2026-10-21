@@ -1,0 +1,155 @@
+<section class="lista">
+  <div class="barra">
+    <div>
+      <h2>Las películas mejor valoradas</h2>
+      <p class="sub">
+        Ranking de TMDB · página {{ pagina() }} de {{ totalPaginas() | number }} ·
+        {{ totalResultados() | number }} títulos
+      </p>
+    </div>
+
+    <div class="controles">
+      <input
+        type="search"
+        class="buscador"
+        placeholder="Filtrar esta página por título"
+        aria-label="Filtrar por título"
+        [value]="filtro()"
+        (input)="alFiltrar($event)"
+      />
+      <div class="alternar" role="group" aria-label="Tipo de vista">
+        <button
+          type="button"
+          [class.activo]="vista() === 'cuadricula'"
+          (click)="vista.set('cuadricula')"
+        >
+          Cuadrícula
+        </button>
+        <button
+          type="button"
+          [class.activo]="vista() === 'lista'"
+          (click)="vista.set('lista')"
+        >
+          Lista
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="esqueleto" aria-label="Cargando películas">
+      @for (n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track n) {
+        <div class="esqueleto__tarjeta"></div>
+      }
+    </div>
+  } @else if (error(); as mensaje) {
+    <div class="aviso" role="alert">
+      <p>{{ mensaje }}</p>
+      <button type="button" (click)="reintentar()">Reintentar</button>
+    </div>
+  } @else {
+    @switch (vista()) {
+      @case ('cuadricula') {
+        <ul class="cuadricula">
+          @for (p of visibles(); track p.id) {
+            <li>
+              <button
+                type="button"
+                class="tarjeta"
+                (click)="seleccionar(p)"
+                [attr.aria-label]="'Ver detalle de ' + p.title"
+              >
+                <span class="puesto"
+                  >#{{ desplazamiento() + peliculas().indexOf(p) + 1 }}</span
+                >
+                @if (poster(p); as src) {
+                  <img
+                    [src]="src"
+                    [alt]="'Póster de ' + p.title"
+                    loading="lazy"
+                    width="342"
+                    height="513"
+                  />
+                } @else {
+                  <span class="sin-poster">Sin póster</span>
+                }
+                <span class="tarjeta__info">
+                  <span class="titulo">{{ p.title }}</span>
+                  <span class="meta">
+                    <span [appCalificacion]="p.vote_average">{{
+                      p.vote_average | number: '1.1-1'
+                    }}</span>
+                    {{ p.release_date | date: 'yyyy' }}
+                  </span>
+                </span>
+              </button>
+            </li>
+          } @empty {
+            <li class="vacio">
+              Ninguna película de esta página coincide con «{{ filtro() }}».
+            </li>
+          }
+        </ul>
+      }
+      @case ('lista') {
+        <ol class="renglones" [start]="desplazamiento() + 1">
+          @for (p of visibles(); track p.id) {
+            <li>
+              <button type="button" class="renglon" (click)="seleccionar(p)">
+                <span class="renglon__titulo">{{ p.title }}</span>
+                <span class="renglon__fecha">{{
+                  p.release_date | date: 'mediumDate'
+                }}</span>
+                <span [appCalificacion]="p.vote_average">{{
+                  p.vote_average | number: '1.1-1'
+                }}</span>
+                <span class="renglon__sinopsis"
+                  >{{ p.overview | slice: 0 : 140
+                  }}{{ p.overview.length > 140 ? '…' : '' }}</span
+                >
+              </button>
+            </li>
+          } @empty {
+            <li class="vacio">
+              Ninguna película de esta página coincide con «{{ filtro() }}».
+            </li>
+          }
+        </ol>
+      }
+    }
+
+    <nav class="paginacion" aria-label="Páginas">
+      <button type="button" (click)="irAPagina(1)" [disabled]="pagina() === 1">
+        « Primera
+      </button>
+      <button
+        type="button"
+        (click)="irAPagina(pagina() - 1)"
+        [disabled]="pagina() === 1"
+      >
+        ‹ Anterior
+      </button>
+      <span>Página {{ pagina() }}</span>
+      <button
+        type="button"
+        (click)="irAPagina(pagina() + 1)"
+        [disabled]="pagina() >= totalPaginas()"
+      >
+        Siguiente ›
+      </button>
+    </nav>
+  }
+</section>
+
+@if (seleccionada(); as id) {
+  <div class="capa" (click)="cerrarDetalle()" (keydown.escape)="cerrarDetalle()">
+    <div
+      class="capa__panel"
+      role="dialog"
+      aria-modal="true"
+      (click)="$event.stopPropagation()"
+    >
+      <app-movie-detail [id]="id" embebido (cerrado)="cerrarDetalle()" />
+    </div>
+  </div>
+}
