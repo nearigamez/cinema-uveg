@@ -1,0 +1,81 @@
+<header class="encabezado">
+  <a routerLink="/" class="marca">
+    <span class="marca__logo" aria-hidden="true">🎬</span>
+    <span>
+      <strong>{{ titulo }}</strong>
+      <small>Películas mejor valoradas con la API de TMDB</small>
+    </span>
+  </a>
+</header>
+
+<main class="contenido">
+  @if (tokens.tieneToken()) {
+    <router-outlet />
+  } @else {
+    <form class="token" (submit)="guardarToken($event, campo)">
+      <h2>Falta el token de TMDB</h2>
+      <p>
+        Pega el <strong>token de acceso de lectura</strong> de tu cuenta de TMDB
+        (Configuración → API). Se guarda solo en este navegador.
+      </p>
+      <input
+        #campo
+        type="password"
+        autocomplete="off"
+        placeholder="eyJhbGciOiJIUzI1NiJ9…"
+        aria-label="Token de TMDB"
+      />
+      <button type="submit">Guardar y cargar películas</button>
+    </form>
+  }
+</main>
+
+<footer class="pie">
+  <details [open]="diagnostico.historial().length > 0">
+    <summary>Diagnóstico HTTP · últimas peticiones a TMDB</summary>
+    @if (diagnostico.historial().length) {
+      <table>
+        <thead>
+          <tr>
+            <th>Método</th>
+            <th>Recurso</th>
+            <th>Estado</th>
+            <th>Tiempo</th>
+            <th>Content-Type</th>
+            <th>Cache-Control</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of diagnostico.historial(); track $index) {
+            <tr>
+              <td>{{ r.metodo }}</td>
+              <td>
+                <code>{{ r.ruta }}</code>
+              </td>
+              <td>
+                <span
+                  class="codigo"
+                  [class.codigo--ok]="r.estado >= 200 && r.estado < 300"
+                  [class.codigo--error]="r.estado >= 400 || r.estado === 0"
+                >
+                  {{ r.estado }} {{ r.textoEstado }}
+                </span>
+              </td>
+              <td>{{ r.milisegundos }} ms</td>
+              <td>{{ r.contentType ?? '—' }}</td>
+              <td>{{ r.cacheControl ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p>Aún no hay peticiones.</p>
+    }
+  </details>
+  <p class="credito">
+    Datos e imágenes de
+    <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"
+      >The Movie Database (TMDB)</a
+    >. Este producto usa la API de TMDB, pero TMDB no lo respalda ni lo certifica.
+  </p>
+</footer>
